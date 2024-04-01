@@ -114,7 +114,8 @@
           <label for="show-more-<?= $post['publication_id'] ?>" class="show-more-label">Показать полностью</label>
         <?php endif; ?>
         <?php if (checkUser('access_level', 'author') && ($choice_publication_author_id === $post["authors_id"])) : ?>
-          <a href="/category.php?id=<?= $categories_info['id']?>" style="font-size: 14px; color: #2A5885;">Редактировать</a>
+          <a href="publication.php?id=<?= $post['publication_id']?>" style="font-size: 14px; color: #2A5885;">Редактировать</a>
+          <a href="../src/actions/delete_publication.php?id=<?= $post['publication_id'] ?>" style="font-size: 14px; color: #2A5885;">Удалить</a>
         <?php endif; ?>
       </div>
     <?php endforeach; ?>

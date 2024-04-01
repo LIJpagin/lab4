@@ -4,6 +4,19 @@ if (checkUser('access_level', 'author')) :
   function isActive($formName, $showForm) {
     return ($formName == $showForm) ? 'active' : '';
   }
+
+  $connect = getConnect();
+  // получаем данные о разрешенных нулевых полях
+  $columns_is_nullable = $connect->query(
+    "SELECT COLUMN_NAME, IS_NULLABLE
+      FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = 'content_management_system'
+      AND TABLE_NAME = 'publications';");
+  // переформировываем столбцы в строки
+  $columns = array();
+  while ($row = $columns_is_nullable->fetch_assoc()) {
+    $columns[$row['COLUMN_NAME']] = $row['IS_NULLABLE'];
+  }
 ?>
 
   <style>
@@ -40,12 +53,36 @@ if (checkUser('access_level', 'author')) :
           <a href="?" style="float: right; font-size: 14px; color: #2A5885;">Скрыть</a>
         </span>
 
-        <form method="post" action="src/actions/create_publications.php" style="margin-bottom: 0px; margin-top: 10px;">
-          <label for="publication-title" class="publication_create">Заголовок</label>
-          <input type="text" id="publication-title" class="publication_create">
+        <form method="post" action="src/actions/create_publication.php" style="margin-bottom: 0px; margin-top: 10px;">
 
-          <label for="publication-content" class="publication_create">Содержание</label>
-          <textarea name="publication-content" class="publication_create"></textarea>
+        <label for="title" class="publication_create">
+          Заголовок
+          <?php echo $columns['title'] == "NO" ? '<span style="color: red;">*</span>' : ''; ?>
+          <input
+            class="publication_create"
+            type="text"
+            id="title"
+            name="title"
+            value="<?php echo old('title'); ?>"
+            <?php echo validationErrorAttr('title'); ?>
+          >
+          <?php if (hasValidationError('title')) : ?>
+            <small><?php echo validationErrorMessage('title'); ?></small>
+          <?php endif; ?>
+        </label>
+
+        <label for="content" class="publication_create">
+          Описание
+          <?php echo $columns['content'] == "NO" ? '<span style="color: red;">*</span>' : ''; ?>
+        </label>
+        <textarea 
+          class="publication_create"
+          id="content"
+          name="content"
+        ><?php echo old('content') ?></textarea>
+        <?php if (hasValidationError('content')) : ?>
+            <small><?php echo validationErrorMessage('content'); ?></small>
+        <?php endif; ?>
 
           <label for="publication-category" class="publication_create">Категория</label>
           <div style="display: flex; align-items: center;">

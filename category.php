@@ -40,12 +40,11 @@ if (!checkUser('access_level', 'reader')) :
 <?php
   $connect = getConnect();
   // получаем данные о разрешенных нулевых полях
-  $sql_category_columns_is_nullable
-      = "SELECT COLUMN_NAME, IS_NULLABLE
-          FROM INFORMATION_SCHEMA.COLUMNS
-          WHERE TABLE_SCHEMA = 'content_management_system'
-          AND TABLE_NAME = 'categories';";
-  $category_columns_is_nullable = $connect->query($sql_category_columns_is_nullable);
+  $category_columns_is_nullable = $connect->query(
+    "SELECT COLUMN_NAME, IS_NULLABLE
+      FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = 'content_management_system'
+      AND TABLE_NAME = 'categories';");
   // переформировываем столбцы в строки
   $category_columns = array();
   while ($row = $category_columns_is_nullable->fetch_assoc()) {
@@ -55,14 +54,13 @@ if (!checkUser('access_level', 'reader')) :
   setOldValue('there_is_data', 'false');
   // пытаемся получить данные читателя
   if (isset($_GET['id'])) {
-    $sql_category_info 
-        = "SELECT *
-            FROM categories
-            WHERE id = '".$_GET['id']."'";
-    $result_category_info = $connect->query($sql_category_info);
-    $category_info = $connect->query($sql_category_info)->fetch_assoc();
+    $result_category_info = $connect->query(
+      "SELECT *
+        FROM categories
+        WHERE id = '".$_GET['id']."'");
     if ($result_category_info->num_rows > 0) {
       $there_is_data = true;
+      $category_info = $result_category_info->fetch_assoc();
       setOldValue('there_is_data', 'true');
       setOldValue('category_id', $category_info['id']);
       setOldValue('category_title', $category_info['title']);
