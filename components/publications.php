@@ -37,7 +37,8 @@
     font-size: 16px;
     color: #000;
     margin-bottom: 0px;
-    max-height: 90px; /* Высота скрытия текста */
+    max-height: 90px;
+    /* Высота скрытия текста */
     overflow: hidden;
   }
 
@@ -53,11 +54,11 @@
     display: none;
   }
 
-  .show-more-checkbox:checked ~ .post_content {
+  .show-more-checkbox:checked~.post_content {
     max-height: none;
   }
 
-  .show-more-checkbox:checked ~ .show-more-label {
+  .show-more-checkbox:checked~.show-more-label {
     display: none;
   }
 
@@ -70,59 +71,62 @@
 </style>
 
 <?php
-  $connect = getConnect();
+$connect = getConnect();
 
-  // запрос id автора для отображения ссылки на редактирование публикаций в ленте
-  $result_choice_publication_author_id
-    = $connect->query("SELECT id FROM authors WHERE id_user = '".$_SESSION['user']['id']."'");
-  $choice_publication_author_id;
-  if ($result_choice_publication_author_id->num_rows > 0) {
-    $choice_publication_author_id = $result_choice_publication_author_id->fetch_assoc()['id'];
-  }
+// запрос id автора для отображения ссылки на редактирование публикаций в ленте
+$result_choice_publication_author_id
+  = $connect->query("SELECT id FROM authors WHERE id_user = '" . $_SESSION['user']['id'] . "'");
+$choice_publication_author_id;
+if ($result_choice_publication_author_id->num_rows > 0) {
+  $choice_publication_author_id = $result_choice_publication_author_id->fetch_assoc()['id'];
+}
 
-  // запрос публикаций по фильтрам
-  $posts = [];
-  if (isset($_SESSION['sql_publications_with_filters'])) {
-    $result = $connect->query($_SESSION['sql_publications_with_filters']);
-    if ($result->num_rows > 0) {
-      while ($row = $result->fetch_assoc()) {
-        $posts[] = $row;
-      }
+// запрос публикаций по фильтрам
+$posts = [];
+if (isset($_SESSION['sql_publications_with_filters'])) {
+  $result = $connect->query($_SESSION['sql_publications_with_filters']);
+  if ($result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+      $posts[] = $row;
     }
   }
-  $connect->close();
+}
+$connect->close();
 ?>
 
 <div class="post_container">
-  <?php if (count($posts) > 0) : ?>
-    <?php foreach ($posts as $post) : ?>
-      <div class="card post">
-        <div class="post_details">
-          <div>
-            <a href="/author_info.php?id=<?= $post["authors_id"] ?>">
-              <span class="post_author not_ref"><?= $post["surname"] ?> <?= $post["name"] ?></span>
-            </a>
-            <a href="/category_info.php?id=<?= $post["categories_id"] ?>">
-              <span class="post_category not_ref"><?= $post["category_title"] ?></span>
-            </a>
+  <form action="../src/actions/delete_publication.php" method="POST">
+    <button type="submit" style="font-size: 14px;">Удалить выделенные</button>
+    <?php if (count($posts) > 0) : ?>
+      <?php foreach ($posts as $post) : ?>
+        <div class="card post">
+          <div class="post_details">
+            <div>
+              <a href="/author_info.php?id=<?= $post["authors_id"] ?>">
+                <span class="post_author not_ref"><?= $post["surname"] ?> <?= $post["name"] ?></span>
+              </a>
+              <a href="/category_info.php?id=<?= $post["categories_id"] ?>">
+                <span class="post_category not_ref"><?= $post["category_title"] ?></span>
+              </a>
+            </div>
+            <span class="post_time"><?= formatDataTime($post["date_time"]) ?></span>
           </div>
-          <span class="post_time"><?= formatDataTime($post["date_time"]) ?></span>
+          <h2 class="post_title"><?= $post["publication_title"] ?></h2>
+          <input class="show-more-checkbox" id="show-more-<?= $post['publication_id'] ?>" type="checkbox">
+          <p class="post_content"><?= $post["content"] ?></p>
+          <?php if (strlen($post["content"]) > 90) : ?>
+            <label for="show-more-<?= $post['publication_id'] ?>" class="show-more-label">Показать полностью</label>
+          <?php endif; ?>
+          <?php if (checkUser('access_level', 'author') && ($choice_publication_author_id === $post["authors_id"])) : ?>
+            <a href="publication.php?id=<?= $post['publication_id'] ?>" style="font-size: 14px; color: #2A5885;">Редактировать</a>
+            <input type="checkbox" name="publication_ids[]" value="<?= $post['publication_id'] ?>" style="font-size: 14px;">
+          <?php endif; ?>
         </div>
-        <h2 class="post_title"><?= $post["publication_title"] ?></h2>
-        <input class="show-more-checkbox" id="show-more-<?= $post['publication_id'] ?>" type="checkbox">
-        <p class="post_content"><?= $post["content"] ?></p>
-        <?php if(strlen($post["content"]) > 90) : ?>
-          <label for="show-more-<?= $post['publication_id'] ?>" class="show-more-label">Показать полностью</label>
-        <?php endif; ?>
-        <?php if (checkUser('access_level', 'author') && ($choice_publication_author_id === $post["authors_id"])) : ?>
-          <a href="publication.php?id=<?= $post['publication_id']?>" style="font-size: 14px; color: #2A5885;">Редактировать</a>
-          <a href="../src/actions/delete_publication.php?id=<?= $post['publication_id'] ?>" style="font-size: 14px; color: #2A5885;">Удалить</a>
-        <?php endif; ?>
+      <?php endforeach; ?>
+    <?php else : ?>
+      <div class="card post">
+        <h2 class="post_title" style="padding-top: 15px;">Нет публикаций</h2>
       </div>
-    <?php endforeach; ?>
-  <?php else : ?>
-    <div class="card post">
-      <h2 class="post_title" style="padding-top: 15px;">Нет публикаций</h2>
-    </div>
-  <?php endif; ?>
+    <?php endif; ?>
+  </form>
 </div>
