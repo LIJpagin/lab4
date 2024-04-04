@@ -7,8 +7,8 @@ $surname = $_POST['author_surname'] ?? null;
 $name = $_POST['author_name'] ?? null;
 $patronymic = $_POST['author_patronymic'] ?? null;
 $birthdate = $_POST['author_birthdate'] ?? null;
-$work_experience = $_POST['author_work_experience'] ?? null;;
-$there_is_data = Old('there_is_data');
+$work_experience = $_POST['author_work_experience'] ?? null;
+$there_is_data = Old('there_is_data') ?? null;
 
 // Выполняем валидацию полученных данных с формы
 if (empty($surname)) {
@@ -16,9 +16,6 @@ if (empty($surname)) {
 }
 if (empty($name)) {
   setValidationError('author_name', 'Поле имени обязательное');
-}
-if (empty($patronymic)) {
-  setValidationError('author_patronymic', 'Поле фамилии обязательное');
 }
 if (empty($birthdate)) {
   setValidationError('author_birthdate', 'Поле дня рождения обязательное');

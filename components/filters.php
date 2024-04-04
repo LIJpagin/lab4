@@ -43,6 +43,9 @@
     <label for="filter-category">По категории</label>
     <select id="filter-category" name="filter-category">
       <option value="">Все категории</option>
+      <?php if (checkUser('access_level', 'reader')) : ?>
+        <option value="my_categories" <?php echo selected('filter-category', 'my_categories');?>>Мои подписки</option>
+      <?php endif; ?>
       <?php
         $connect = getConnect();
         $result_categories = $connect->query("SELECT id, title FROM categories");
@@ -56,7 +59,10 @@
     <select id="filter-author" name="filter-author">
       <option value="">Все авторы</option>
       <?php if (checkUser('access_level', 'author')) : ?>
-        <option value="my" <?php echo selected('filter-author', 'my');?>>Мои публикации</option>
+        <option value="my_publications" <?php echo selected('filter-author', 'my_publications');?>>Мои публикации</option>
+      <?php endif; ?>
+      <?php if (checkUser('access_level', 'reader')) : ?>
+        <option value="my_authors" <?php echo selected('filter-author', 'my_authors');?>>Мои подписки</option>
       <?php endif; ?>
       <?php
         $result_authors = $connect->query("SELECT id, CONCAT(surname, ' ', name) AS full_name FROM authors");
@@ -101,21 +107,50 @@ $sql_publications_with_filters
       WHERE 1";
 
 if (!empty($filter_author)) {
-  if ($filter_author === "my") {
-    $sql_author_info 
-        = "SELECT id FROM authors WHERE id_user = '".$_SESSION['user']['id']."'";
-    $result_author_id = $connect->query($sql_author_info);
-    $author_id = $connect->query($sql_author_info)->fetch_assoc()['id'];
+  if ($filter_author === "my_publications") {
+    $result_author_id = $connect->query("SELECT id FROM authors WHERE id_user = '".$_SESSION['user']['id']."'");
+    $author_id = $result_author_id->fetch_assoc()['id'];
     if ($result_author_id->num_rows > 0)
       $sql_publications_with_filters .= " AND authors.id = '".$author_id."'";
+  }
+  else if ($filter_author === "my_authors") {
+    $reader_id = $connect->query("SELECT id FROM readers WHERE id_user = '".$_SESSION['user']['id']."'")->fetch_assoc()['id'];
+    $result_subscribed_authors = $connect->query("SELECT id_author FROM readers_authors WHERE id_reader = '".$reader_id."'");
+    if ($result_subscribed_authors->num_rows > 0) {
+        $subscribed_authors = array();
+        while ($row = $result_subscribed_authors->fetch_assoc()) {
+            $subscribed_authors[] = $row['id_author'];
+        }
+        $sql_publications_with_filters .= " AND authors.id IN (".implode(",", $subscribed_authors).")";
+    } else {
+        $sql_publications_with_filters .= " AND 0";
+    }
   }
   else {
     $sql_publications_with_filters .= " AND authors.id = '$filter_author'";
   }
 }
 
-if (!empty($filter_category))
-  $sql_publications_with_filters .= " AND categories.id = '$filter_category'";
+if (!empty($filter_category)) {
+  if ($filter_category === "my_categories") {
+    $reader_id = $connect->query("SELECT id FROM readers WHERE id_user = '".$_SESSION['user']['id']."'")->fetch_assoc()['id'];
+    $result_subscribed_categories = $connect->query("SELECT id_category FROM readers_categories WHERE id_reader = '".$reader_id."'");
+    if ($result_subscribed_categories->num_rows > 0) {
+        $subscribed_categories = array();
+        while ($row = $result_subscribed_categories->fetch_assoc()) {
+            $subscribed_categories[] = $row['id_category'];
+        }
+        $sql_publications_with_filters .= " AND categories.id IN (".implode(",", $subscribed_categories).")";
+    } else {
+        $sql_publications_with_filters .= " AND 0"; 
+    }
+  }
+  else {
+    $sql_publications_with_filters .= " AND categories.id = '$filter_category'";
+  }
+}
+
+
 if ($sort_order == 'newest')
   $sql_publications_with_filters .= " ORDER BY publications.date_time DESC";
 if ($sort_order == 'oldest')

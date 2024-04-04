@@ -33,7 +33,7 @@ if ($password !== $passwordConfirmation) {
 
 if (!empty($_SESSION['validation'])) {
     setOldValue('login_name', $login_name);
-    setOldValue('email', $email);
+    setOldValue('password', $password);
     setOldValue('access_level', $access_level);
     redirect('/register.php');
 }

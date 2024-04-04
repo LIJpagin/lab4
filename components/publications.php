@@ -73,7 +73,8 @@
   $connect = getConnect();
 
   // запрос id автора для отображения ссылки на редактирование публикаций в ленте
-  $result_choice_publication_author_id = $connect->query("SELECT id FROM authors WHERE id_user = '".$_SESSION['user']['id']."'");
+  $result_choice_publication_author_id
+    = $connect->query("SELECT id FROM authors WHERE id_user = '".$_SESSION['user']['id']."'");
   $choice_publication_author_id;
   if ($result_choice_publication_author_id->num_rows > 0) {
     $choice_publication_author_id = $result_choice_publication_author_id->fetch_assoc()['id'];
